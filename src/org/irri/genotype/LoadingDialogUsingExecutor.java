@@ -68,10 +68,10 @@ public class LoadingDialogUsingExecutor extends Dialog {
 	private Button cancel;
 	private SampleFileOperation loader;
 
-	protected LoadingDialogUsingExecutor(Display display, Shell parentShell, FileChooserListener fcl, FileChooserListener fcl2,
-			FileChooserListener fcl3, FileChooserListener fcl4, FileChooserListener fcl5, Cvterm cvterm,
-			Organism organism, Db db, Variantset vSet, Cvterm ctTermfeature, Cvterm nonSynTerm, Cvterm spliceAccTerm,
-			Cvterm spliceDnrTerm) {
+	protected LoadingDialogUsingExecutor(Display display, Shell parentShell, FileChooserListener fcl,
+			FileChooserListener fcl2, FileChooserListener fcl3, FileChooserListener fcl4, FileChooserListener fcl5,
+			Cvterm cvterm, Organism organism, Db db, Variantset vSet, Cvterm ctTermfeature, Cvterm nonSynTerm,
+			Cvterm spliceAccTerm, Cvterm spliceDnrTerm) {
 		super(parentShell);
 		setShellStyle(SWT.APPLICATION_MODAL);
 		this.display = display;
@@ -133,7 +133,7 @@ public class LoadingDialogUsingExecutor extends Dialog {
 
 		loader.start();
 
-		System.out.println("RUNNING");
+		// System.out.println("RUNNING");
 
 		return container;
 	}
@@ -303,9 +303,8 @@ public class LoadingDialogUsingExecutor extends Dialog {
 						// snpFeaturePropDs.insertRecord(snpFeatureProp);
 
 						// vvSet = null;
-						
+
 						line = null;
-						
 
 						updateProgressBar();
 						snpFeatureLoc = null;

@@ -25,7 +25,7 @@ public class FileChooserListener implements Listener {
 		case SWT.Selection:
 			final JFileChooser chooser = new JFileChooser();
 			int returnVal = chooser.showOpenDialog(new FileChooserDemo());
-			System.out.println("RETURN VAL"+ returnVal);
+			//System.out.println("RETURN VAL"+ returnVal);
 			if (returnVal == JFileChooser.APPROVE_OPTION) {
 				file = chooser.getSelectedFile();
 				logTextBox.setText(file.getAbsolutePath());

@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
@@ -84,8 +85,6 @@ public class GenotypeLoaderUI {
 
 	private FileChooserListener fcl5;
 
-	private SettingsDialog dialog;
-
 	private Cache cache;
 
 	private HashMap<String, String> properties;
@@ -111,6 +110,10 @@ public class GenotypeLoaderUI {
 	private Text textSnpGenotype;
 
 	private FileChooserListener fcl7;
+
+	private LoaderProperties prop;
+
+	private MenuSettingsSelectionAdapter msa;
 
 	/**
 	 * Launch the application.
@@ -204,8 +207,9 @@ public class GenotypeLoaderUI {
 		shlGenotypeLoader.setMenuBar(menu);
 
 		MenuItem mntmSettings = new MenuItem(menu, SWT.NONE);
-		MenuSettingsSelectionAdapter msa = new MenuSettingsSelectionAdapter(shlGenotypeLoader, cache, properties, this);
+		msa = new MenuSettingsSelectionAdapter(shlGenotypeLoader, cache, properties, this);
 		mntmSettings.addSelectionListener(msa);
+		msa.setPropertyFile(prop);
 
 		// mntmSettings.addSelectionListener(new SelectionAdapter() {
 		//
@@ -296,12 +300,15 @@ public class GenotypeLoaderUI {
 			@Override
 			public void handleEvent(Event arg0) {
 				AddOrganismDialog dialog = new AddOrganismDialog(shlGenotypeLoader);
-				dialog.open();
+				if (Window.OK == dialog.open()) {
+					comboOrganism.removeAll();
 
-				comboOrganism.removeAll();
+					initComboItem(comboOrganism, org_ds.getAllOrganismName().toArray());
+					
+					
+				}
 
-				initComboItem(comboOrganism, org_ds.getAllOrganismName().toArray());
-
+				
 			}
 		});
 
@@ -313,7 +320,6 @@ public class GenotypeLoaderUI {
 		comboCvTerm.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 
 		Button btnNewCvTerm = new Button(shlGenotypeLoader, SWT.NONE);
-		btnNewCvTerm.setEnabled(false);
 		GridData gd_btnNewCvTerm = new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 1);
 		gd_btnNewCvTerm.widthHint = 129;
 		btnNewCvTerm.setLayoutData(gd_btnNewCvTerm);
@@ -323,11 +329,15 @@ public class GenotypeLoaderUI {
 			@Override
 			public void handleEvent(Event arg0) {
 				AddCvTermDialog dialog = new AddCvTermDialog(shlGenotypeLoader);
-				dialog.open();
+				if (Window.OK == dialog.open()) {
+					comboCvTerm.removeAll();
 
-				comboCvTerm.removeAll();
+					initComboItem(comboCvTerm, cvTerm_ds.getAllCvTermName().toArray());
+					
+					
+				}
 
-				initComboItem(comboCvTerm, cvTerm_ds.getAllCvTermName().toArray());
+				
 
 			}
 		});
@@ -349,11 +359,15 @@ public class GenotypeLoaderUI {
 			@Override
 			public void handleEvent(Event arg0) {
 				AddDbDialog dialog = new AddDbDialog(shlGenotypeLoader);
-				dialog.open();
+				if (Window.OK == dialog.open()) {
+					comboDb.removeAll();
+					
+					initComboItem(comboDb, db_ds.getAllDbName().toArray());
+					
+					
+				}
 
-				comboDb.removeAll();
 
-				initComboItem(comboDb, db_ds.getAllDbName().toArray());
 
 			}
 		});
@@ -406,11 +420,16 @@ public class GenotypeLoaderUI {
 			@Override
 			public void handleEvent(Event arg0) {
 				AddVariantSetDialog dialog = new AddVariantSetDialog(shlGenotypeLoader);
-				dialog.open();
+				if (Window.OK == dialog.open()) {
+					comboVariantSet.removeAll();
 
-				comboVariantSet.removeAll();
+					initComboItem(comboVariantSet, v_ds.getAllVariantSet().toArray());
+					
+					
+				}
 
-				initComboItem(comboVariantSet, v_ds.getAllVariantSet().toArray());
+
+
 
 			}
 		});
@@ -439,11 +458,15 @@ public class GenotypeLoaderUI {
 			@Override
 			public void handleEvent(Event arg0) {
 				AddCvTermDialog dialog = new AddCvTermDialog(shlGenotypeLoader);
-				dialog.open();
+				if (Window.OK == dialog.open()) {
+					comboCvTermFeature.removeAll();
 
-				comboCvTermFeature.removeAll();
+					initComboItem(comboCvTermFeature, cvTerm_ds.getAllCvTermName().toArray());
+					
+					
+				}
 
-				initComboItem(comboCvTermFeature, cvTerm_ds.getAllCvTermName().toArray());
+				
 
 			}
 		});
@@ -467,11 +490,16 @@ public class GenotypeLoaderUI {
 			@Override
 			public void handleEvent(Event arg0) {
 				AddCvTermDialog dialog = new AddCvTermDialog(shlGenotypeLoader);
-				dialog.open();
+				if (Window.OK == dialog.open()) {
+					comboCvFeature.removeAll();
 
-				comboCvFeature.removeAll();
+					initComboItem(comboCvFeature, cv_ds.findAllName().toArray());
+					
+					
+				}
 
-				initComboItem(comboCvFeature, cv_ds.findAllName().toArray());
+
+
 
 			}
 		});
@@ -665,7 +693,7 @@ public class GenotypeLoaderUI {
 						Cvterm featureCvTerm = featureCvTermList.get(0);
 						LoadingDialog loading = new LoadingDialog(display, shlGenotypeLoader, fcl, fcl2, fcl3, fcl4,
 								fcl5, fcl6, cvterm, organism, db, vSet, featureCvTerm, nonSynTerm, spliceAccTerm,
-								spliceDnrTerm);
+								spliceDnrTerm, msa.getPropertyFile());
 						loading.open();
 					} else {
 						AddFeatureTypeDialog loading = new AddFeatureTypeDialog(display, shlGenotypeLoader, fcl, fcl2,
@@ -756,6 +784,15 @@ public class GenotypeLoaderUI {
 		properties.put(LoaderConstants.PASSWORD, PASSWORD);
 
 		properties.put(LoaderConstants.CONFIG_NAME, "DEFAULT");
+		
+		prop = new LoaderProperties();
+		prop.setDatabasename(HOSTNAME);
+		prop.setPort(PORT);
+		prop.setDatabasename(DATABASE);
+		prop.setUsername(USERNAME);
+		prop.setPassword(PASSWORD);
+		
+		
 
 	}
 

@@ -1,6 +1,7 @@
 package org.irri.genotype.components.form;
 
 import java.util.HashMap;
+import java.util.List;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -119,9 +120,8 @@ public class VariantSetForm extends Composite implements LoaderForm {
 		cvTermMap.clear();
 
 		int index = 0;
-		for (Cvterm cvTerm : cvTermDs.findAll()) {
-			cvTermCombo.add(cvTerm.getName(), index);
-			cvTermMap.put(index, cvTerm);
+		for (String term : cvTermDs.getAllCvTermName()) {
+			cvTermCombo.add(term);
 		}
 
 	}
@@ -130,9 +130,9 @@ public class VariantSetForm extends Composite implements LoaderForm {
 	public void save() {
 		VariantSetService ds = new VariantSetService();
 
-		Integer sId = cvTermCombo.getSelectionIndex();
-		Cvterm cvterm = cvTermMap.get(sId);
-
+		
+		Cvterm cvterm = cvTermDs.findCvtermyName(cvTermCombo.getText()).get(0);
+		
 		Variantset vSet = new Variantset();
 		vSet.setCvterm(cvterm);
 		vSet.setDescription(txtDescbox.getText());

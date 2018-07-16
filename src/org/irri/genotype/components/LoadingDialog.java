@@ -35,6 +35,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.ProgressBar;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.irri.genotype.LoaderProperties;
 import org.irri.genotype.loader.object.LoaderSnpFeature;
 import org.irri.genotype.loader.object.LoaderSnpFeatureLoc;
 import org.irri.genotype.loader.object.LoaderSnpFeatureProp;
@@ -53,6 +54,7 @@ import chado.loader.model.Variantset;
 import chado.loader.service.FeatureService;
 import chado.loader.service.GenotypeRunService;
 import chado.loader.service.PlatformService;
+import chado.loader.service.SnpFeatureService;
 import chado.loader.service.StockService;
 import de.bytefish.pgbulkinsert.PgBulkInsert;
 import de.bytefish.pgbulkinsert.util.PostgreSqlUtils;
@@ -81,11 +83,12 @@ public class LoadingDialog extends Dialog {
 	private SampleFileOperation loader;
 	private Button okButton;
 	private FileChooserListener fcl6;
+	private LoaderProperties prop;
 
 	public LoadingDialog(Display display, Shell parentShell, FileChooserListener fcl, FileChooserListener fcl2,
 			FileChooserListener fcl3, FileChooserListener fcl4, FileChooserListener fcl5, FileChooserListener fcl6,
 			Cvterm cvterm, Organism organism, Db db, Variantset vSet, Cvterm ctTermfeature, Cvterm nonSynTerm,
-			Cvterm spliceAccTerm, Cvterm spliceDnrTerm) {
+			Cvterm spliceAccTerm, Cvterm spliceDnrTerm, LoaderProperties prop) {
 		super(parentShell);
 		setShellStyle(SWT.APPLICATION_MODAL);
 		this.display = display;
@@ -104,6 +107,7 @@ public class LoadingDialog extends Dialog {
 		this.spliceDnrTerm = spliceDnrTerm;
 		this.spliceAccTerm = spliceAccTerm;
 
+		this.prop = prop;
 	}
 
 	@Override
@@ -144,7 +148,7 @@ public class LoadingDialog extends Dialog {
 
 		loader.start();
 
-		System.out.println("RUNNING");
+//		System.out.println("RUNNING");
 
 		return container;
 	}
@@ -188,17 +192,25 @@ public class LoadingDialog extends Dialog {
 		private int lines;
 		private Connection conn;
 		private Object platformm;
+		private long startTime;
 
 		public void run() {
 			final StockService ds = new StockService();
 			final FeatureService featureDs = new FeatureService();
+			final SnpFeatureService sf_ds = new SnpFeatureService();
+
+			Integer id = (Integer) sf_ds.getSnpFeatureCurrentSeqNumber();
 
 			conn = null;
 
-			long startTime = System.nanoTime();
+			startTime = System.nanoTime();
 
 			try {
-				conn = DriverManager.getConnection("jdbc:postgresql://172.29.4.215:5432/lbarboza", "iric", "iric-dev");
+				System.out.println("jdbc:postgresql://" + prop.getHostname() + "/" + prop.getDatabasename()+ ","+
+						prop.getUsername()+","+ prop.getPassword());
+				conn = DriverManager.getConnection(
+						"jdbc:postgresql://" + prop.getHostname() + "/" + prop.getDatabasename(), prop.getUsername(),
+						prop.getPassword());
 			} catch (SQLException e2) {
 				// TODO Auto-generated catch block
 				e2.printStackTrace();
@@ -242,7 +254,8 @@ public class LoadingDialog extends Dialog {
 						stock.setName(textContent);
 						stock.setUniquename(textContent);
 
-						ds.insertRecord(stock);
+						if (ds.findByStockyByOrganismTypeName(cvterm, organism, textContent).isEmpty())
+							ds.insertRecord(stock);
 
 						stock = null;
 						line = null;
@@ -254,13 +267,14 @@ public class LoadingDialog extends Dialog {
 
 				updateProgressBar();
 
-				LoaderSnpFeature e;
-				LoaderSnpFeatureLoc snpFeatureLoc;
+				LoaderSnpFeature loaderSnpFeature;
+				LoaderSnpFeatureLoc loaderSnpFeatureLoc;
 
 				List<LoaderSnpFeature> snpFeatureList = new ArrayList<>();
 				List<LoaderSnpFeatureLoc> snpfeatureLocList = new ArrayList<>();
-				HashMap<String, HashMap<String, Integer>> snpFeatureMap = new HashMap<>();
-				HashMap<String, Integer> posMap;
+				// HashMap<String, HashMap<String, Integer>> snpFeatureMap = new HashMap<>();
+				HashMap<String, Integer> snpFeatureMap = new HashMap<>();
+				// HashMap<String, Integer> posMap;
 
 				Feature feature = null;
 
@@ -271,7 +285,7 @@ public class LoadingDialog extends Dialog {
 					writeProgress("Loading SnpFeature.... \n");
 					writeProgress("Loading " + positionFile + " records .... \n");
 					// for (int i = 1; i <= lines; i++) {
-					int i = 1;
+					int i = id +1;
 
 					String pos = "";
 					while ((line = posFileReader.readLine()) != null) {
@@ -279,51 +293,50 @@ public class LoadingDialog extends Dialog {
 
 						if (!pos.equals(token[0])) {
 
-							// List<Feature> result = featureDs.getFeatureByNameTypeOrganism("Chr" +
-							// token[0],
-							// ctTermfeature, organism);
-							//
-							// if (result.size() == 0) {
-							pos = token[0];
-							feature = new Feature();
-							feature.setCvterm(ctTermfeature);
-							feature.setOrganism(organism);
-							feature.setName("Chr" + token[0]);
-							feature.setUniquename("Chr0" + token[0]);
+							List<Feature> result = featureDs.getFeatureByNameTypeOrganism("Chr" + token[0],
+									ctTermfeature, organism);
 
-							featureDs.insertRecord(feature);
-							// }else
-							// feature = result.get(0);
+							if (result.size() == 0) {
+								pos = token[0];
+								feature = new Feature();
+								feature.setCvterm(ctTermfeature);
+								feature.setOrganism(organism);
+								feature.setName("Chr" + token[0]);
+								feature.setUniquename("Chr0" + token[0]);
 
-						}
-
-						if (!snpFeatureMap.containsKey(pos)) {
-							posMap = new HashMap<>();
-							posMap.put(token[1].trim(), i);
-
-						} else {
-							posMap = snpFeatureMap.get(pos);
-							posMap.put(token[1].trim(), i);
+								featureDs.insertRecord(feature);
+							} else
+								feature = result.get(0);
 
 						}
-						snpFeatureMap.put(pos, posMap);
 
-						e = new LoaderSnpFeature();
-						e.setSnpFeatureId(i);
-						e.setVariantSetId(vset.getVariantsetId());
+						// if (!snpFeatureMap.containsKey(pos)) {
+						// posMap = new HashMap<>();
+						// posMap.put(token[1].trim(), i);
+						//
+						// } else {
+						// posMap = snpFeatureMap.get(pos);
+						// posMap.put(token[1].trim(), i);
+						//
+						// }
+						snpFeatureMap.put(token[1].trim(), i);
 
-						snpFeatureList.add(e);
+						loaderSnpFeature = new LoaderSnpFeature();
+						loaderSnpFeature.setSnpFeatureId(i);
+						loaderSnpFeature.setVariantSetId(vset.getVariantsetId());
 
-						e = null;
+						snpFeatureList.add(loaderSnpFeature);
 
-						snpFeatureLoc = new LoaderSnpFeatureLoc();
-						snpFeatureLoc.setOrganismId(organism.getOrganismId());
-						snpFeatureLoc.setSrcFeatureid(feature.getFeatureId());
-						snpFeatureLoc.setRefCall(token[2]);
-						snpFeatureLoc.setPosition(Integer.parseInt(token[1]));
-						snpFeatureLoc.setSnpfeatureId(i);
+						loaderSnpFeature = null;
 
-						snpfeatureLocList.add(snpFeatureLoc);
+						loaderSnpFeatureLoc = new LoaderSnpFeatureLoc();
+						loaderSnpFeatureLoc.setOrganismId(organism.getOrganismId());
+						loaderSnpFeatureLoc.setSrcFeatureid(feature.getFeatureId());
+						loaderSnpFeatureLoc.setRefCall(token[2]);
+						loaderSnpFeatureLoc.setPosition(Integer.parseInt(token[1]));
+						loaderSnpFeatureLoc.setSnpfeatureId(i);
+
+						snpfeatureLocList.add(loaderSnpFeatureLoc);
 
 						counter++;
 						i++;
@@ -359,20 +372,20 @@ public class LoadingDialog extends Dialog {
 
 				writeProgress("Loading Non Synch.... \n");
 				if (nonSynfileReader != null) {
-					insertSnpFeatureProp(nonSynfileReader, snpFeatureMap);
+					insertSnpFeatureProp(nonSynfileReader, snpFeatureMap, nonSynTerm);
 				}
 
 				updateProgressBar();
 
 				writeProgress("Loading Splice Acc.... \n");
 				if (spliceAccReader != null) {
-					insertSnpFeatureProp(spliceAccReader, snpFeatureMap);
+					insertSnpFeatureProp(spliceAccReader, snpFeatureMap, spliceAccTerm);
 				}
 
 				writeProgress("Loading Splice Donor.... \n");
 
 				if (spliceDnrReader != null) {
-					insertSnpFeatureProp(spliceDnrReader, snpFeatureMap);
+					insertSnpFeatureProp(spliceDnrReader, snpFeatureMap, spliceDnrTerm);
 					// display.asyncExec(new Runnable() {
 					//
 					// public void run() {
@@ -438,7 +451,7 @@ public class LoadingDialog extends Dialog {
 
 				display.syncExec(new Runnable() {
 					public void run() {
-						System.out.println("Starting to 2nd part of loading");
+//						System.out.println("Starting to 2nd part of loading");
 						Platform platform = insertPlatForm();
 						if (fcl6.getFile() != null)
 							insertGenotypeRun(platform);
@@ -478,10 +491,6 @@ public class LoadingDialog extends Dialog {
 					}
 				});
 
-				long difference = System.nanoTime() - startTime;
-				writeProgress("Total execution time: " + String.format("%d min, %d sec",
-						TimeUnit.NANOSECONDS.toHours(difference), TimeUnit.NANOSECONDS.toSeconds(difference)
-								- TimeUnit.MINUTES.toSeconds(TimeUnit.NANOSECONDS.toMinutes(difference))));
 				endProgress();
 
 			} catch (FileNotFoundException e1) {
@@ -520,26 +529,29 @@ public class LoadingDialog extends Dialog {
 		//
 		// }
 
-		private void insertSnpFeatureProp(BufferedReader file,
-				HashMap<String, HashMap<String, Integer>> snpFeatureMap) {
+		private void insertSnpFeatureProp(BufferedReader file, HashMap<String, Integer> snpFeatureMap, Cvterm cvTerm) {
 			display.asyncExec(new Runnable() {
 				public void run() {
 					String line;
 					LoaderSnpFeatureProp snpFeatureProp;
-					List<LoaderSnpFeatureProp> splicelist = new ArrayList<>();
+					List<LoaderSnpFeatureProp> snpFeaturePropList = new ArrayList<>();
 
 					try {
 						while ((line = file.readLine()) != null) {
 							String token[] = line.split(",");
+//							System.out.println("LINE:" + line);
+//							System.out.println("Token: " + token[0] + "->" + token[1]);
 
-							HashMap<String, Integer> pos = snpFeatureMap.get(token[0]);
-							// System.out.println("SIze "+ token[0]+"->"+ pos.size());
+							// HashMap<String, Integer> pos = snpFeatureMap.get(token[0]);
+//							System.out.println("SNP FEATURE MAP: " + snpFeatureMap.size());
+//							System.out.println("snpFeature size: " + snpFeatureMap.size());
+
 							snpFeatureProp = new LoaderSnpFeatureProp();
-							snpFeatureProp.setTypeId(spliceAccTerm.getCvtermId());
-							snpFeatureProp.setSnpFeatureId(pos.get(token[1].trim()));
+							snpFeatureProp.setTypeId(cvTerm.getCvtermId());
+							snpFeatureProp.setSnpFeatureId(snpFeatureMap.get(token[1].trim()));
 							snpFeatureProp.setValue(token[2]);
 
-							splicelist.add(snpFeatureProp);
+							snpFeaturePropList.add(snpFeatureProp);
 
 							// System.out.println(snpFeatureProp.getTypeId() +": "+
 							// snpFeatureProp.getSnpFeatureId() +" : "+ snpFeatureProp.getValue());
@@ -556,7 +568,7 @@ public class LoadingDialog extends Dialog {
 									new SnpFeaturePropMapping("public", "snp_featureprop"));
 
 							bulkInsertSnpFeatureProp.saveAll(PostgreSqlUtils.getPGConnection(conn),
-									splicelist.stream());
+									snpFeaturePropList.stream());
 
 							// // Now save all entities of a given stream:
 							// bulkInsert.saveAll(PostgreSqlUtils.getPGConnection(connection),
@@ -582,6 +594,11 @@ public class LoadingDialog extends Dialog {
 		private void endProgress() {
 			display.asyncExec(new Runnable() {
 				public void run() {
+					long difference = System.nanoTime() - startTime;
+					writeProgress("Total execution time: " + String.format("%d min, %d sec",
+							TimeUnit.NANOSECONDS.toHours(difference), TimeUnit.NANOSECONDS.toSeconds(difference)
+									- TimeUnit.MINUTES.toSeconds(TimeUnit.NANOSECONDS.toMinutes(difference))));
+
 					okButton.setEnabled(true);
 					okButton.setText("Finish");
 					cancel.setEnabled(false);

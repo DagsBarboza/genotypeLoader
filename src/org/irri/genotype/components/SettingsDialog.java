@@ -49,11 +49,11 @@ public class SettingsDialog extends Dialog {
 	private HashMap<String, String> properties;
 	private GenotypeLoaderUI genotypeLoaderUI;
 
-	public SettingsDialog(Shell parentShell, Cache cache, GenotypeLoaderUI genotypeLoaderUI) {
+	public SettingsDialog(Shell parentShell, Cache cache, HashMap<String, String> properties, GenotypeLoaderUI genotypeLoaderUI) {
 		super(parentShell);
 		// setShellStyle(SWT.APPLICATION_MODAL);
+		this.properties = properties;
 		this.genotypeLoaderUI = genotypeLoaderUI;
-		this.properties = genotypeLoaderUI.getProperties();
 		this.cache = cache;
 
 	}
@@ -281,6 +281,9 @@ public class SettingsDialog extends Dialog {
 		return combo.getText();
 	}
 
+	public LoaderProperties getProperties() {
+		return prop;
+	}
 	
 
 }
