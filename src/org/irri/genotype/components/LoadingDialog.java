@@ -39,9 +39,11 @@ import org.irri.genotype.LoaderProperties;
 import org.irri.genotype.loader.object.LoaderSnpFeature;
 import org.irri.genotype.loader.object.LoaderSnpFeatureLoc;
 import org.irri.genotype.loader.object.LoaderSnpFeatureProp;
+import org.irri.genotype.loader.object.LoaderVariantVariantSet;
 import org.irri.genotype.mapping.SnpFeatureLocMapping;
 import org.irri.genotype.mapping.SnpFeaturePropMapping;
 import org.irri.genotype.mapping.SnpfeatureMapping;
+import org.irri.genotype.mapping.VariantVariantSetMapping;
 
 import chado.loader.model.Cvterm;
 import chado.loader.model.Db;
@@ -56,6 +58,7 @@ import chado.loader.service.GenotypeRunService;
 import chado.loader.service.PlatformService;
 import chado.loader.service.SnpFeatureService;
 import chado.loader.service.StockService;
+import chado.loader.service.VariantVariantSetService;
 import de.bytefish.pgbulkinsert.PgBulkInsert;
 import de.bytefish.pgbulkinsert.util.PostgreSqlUtils;
 
@@ -199,8 +202,12 @@ public class LoadingDialog extends Dialog {
 			final FeatureService featureDs = new FeatureService();
 			final SnpFeatureService sf_ds = new SnpFeatureService();
 
+			VariantVariantSetService vvs_ds = new VariantVariantSetService();
+			
 			Integer id = (Integer) sf_ds.getSnpFeatureCurrentSeqNumber();
 
+			Integer vvs_id = vvs_ds.getVariantVariantSetCurrentSeqNumber() + 1;
+			
 			conn = null;
 
 			startTime = System.nanoTime();
@@ -269,9 +276,11 @@ public class LoadingDialog extends Dialog {
 
 				LoaderSnpFeature loaderSnpFeature;
 				LoaderSnpFeatureLoc loaderSnpFeatureLoc;
+				LoaderVariantVariantSet loadervvs;
 
 				List<LoaderSnpFeature> snpFeatureList = new ArrayList<>();
 				List<LoaderSnpFeatureLoc> snpfeatureLocList = new ArrayList<>();
+				List<LoaderVariantVariantSet> vvs_list = new ArrayList<>();
 				// HashMap<String, HashMap<String, Integer>> snpFeatureMap = new HashMap<>();
 				HashMap<String, Integer> snpFeatureMap = new HashMap<>();
 				// HashMap<String, Integer> posMap;
@@ -326,8 +335,18 @@ public class LoadingDialog extends Dialog {
 						loaderSnpFeature.setVariantSetId(vset.getVariantsetId());
 
 						snpFeatureList.add(loaderSnpFeature);
+						
+						loadervvs = new LoaderVariantVariantSet();
+						loadervvs.setVariantVariantsetId(vvs_id);
+						loadervvs.setVariantFeatureId(i);
+						loadervvs.setVariantset(vset.getVariantsetId());
+						loadervvs.setHdf5Index(i - 1);
+						
+						
+						
+						vvs_list.add(loadervvs);
 
-						loaderSnpFeature = null;
+						
 
 						loaderSnpFeatureLoc = new LoaderSnpFeatureLoc();
 						loaderSnpFeatureLoc.setOrganismId(organism.getOrganismId());
@@ -338,6 +357,10 @@ public class LoadingDialog extends Dialog {
 
 						snpfeatureLocList.add(loaderSnpFeatureLoc);
 
+						loaderSnpFeature = null;
+						loaderSnpFeatureLoc = null;
+						loadervvs = null;
+						
 						counter++;
 						i++;
 
@@ -356,10 +379,16 @@ public class LoadingDialog extends Dialog {
 
 					PgBulkInsert<LoaderSnpFeatureLoc> bulkInsertSnpFeatureLoc = new PgBulkInsert<LoaderSnpFeatureLoc>(
 							new SnpFeatureLocMapping("public", "snp_featureloc"));
+					
+					PgBulkInsert<LoaderVariantVariantSet> bulkInsertVariantVariantSet= new PgBulkInsert<LoaderVariantVariantSet>(
+							new VariantVariantSetMapping("public", "variant_variantset"));
+
 
 					bulkInsert.saveAll(PostgreSqlUtils.getPGConnection(conn), snpFeatureList.stream());
 
 					bulkInsertSnpFeatureLoc.saveAll(PostgreSqlUtils.getPGConnection(conn), snpfeatureLocList.stream());
+					
+					bulkInsertVariantVariantSet.saveAll(PostgreSqlUtils.getPGConnection(conn), vvs_list.stream());
 
 					// // Now save all entities of a given stream:
 					// bulkInsert.saveAll(PostgreSqlUtils.getPGConnection(connection),
