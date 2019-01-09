@@ -361,8 +361,10 @@ public class LoadingDialog extends Dialog {
 						loaderSnpFeatureLoc = null;
 						loadervvs = null;
 						
+						vvs_id++;
 						counter++;
 						i++;
+						
 
 					}
 					updateProgressBar();

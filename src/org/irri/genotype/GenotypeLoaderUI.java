@@ -51,7 +51,7 @@ public class GenotypeLoaderUI {
 
 	private static final String PORT = "5432";
 
-	private static final String DATABASE = "lbarboza";
+	private static final String DATABASE = "iric";
 
 	private static final String USERNAME = "iric";
 

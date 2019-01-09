@@ -55,7 +55,7 @@ public class TestCopy {
 
 		Connection conn;
 		try {
-			conn = DriverManager.getConnection("jdbc:postgresql://172.29.4.215:5432/lbarboza", "iric", "iric-dev");
+			conn = DriverManager.getConnection("jdbc:postgresql://172.29.4.215:5432/iric", "iric", "iric-dev");
 
 			System.err.println("Copying text data rows from stdin");
 
@@ -105,7 +105,7 @@ public class TestCopy {
 		}
 
 		try {
-			Connection conn = DriverManager.getConnection("jdbc:postgresql://172.29.4.215:5432/lbarboza", "iric",
+			Connection conn = DriverManager.getConnection("jdbc:postgresql://172.29.4.215:5432/iric", "iric",
 					"iric-dev");
 			// // Create the BulkInserter:
 			PgBulkInsert<LoaderSnpFeature> bulkInsert = new PgBulkInsert<LoaderSnpFeature>(
