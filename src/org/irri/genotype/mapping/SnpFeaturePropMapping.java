@@ -11,7 +11,7 @@ public class SnpFeaturePropMapping extends AbstractMapping<LoaderSnpFeatureProp>
 
 		mapInteger("snp_feature_id", LoaderSnpFeatureProp::getSnpFeatureId);
 		mapInteger("type_id", LoaderSnpFeatureProp::getTypeId);
-		mapString("value", LoaderSnpFeatureProp::getValue);
+		mapText("value", LoaderSnpFeatureProp::getValue);
 		
 
 	}

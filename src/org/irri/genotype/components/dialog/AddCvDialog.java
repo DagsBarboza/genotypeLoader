@@ -16,12 +16,14 @@ public class AddCvDialog extends Dialog {
 		super(parentShell);
 		
 		
+		
+		
 	}
 
 	@Override
 	protected Control createDialogArea(Composite parent) {
 		container = (Composite) super.createDialogArea(parent);
-
+		
 		form = new CvForm(container, SWT.NONE);
 
 		return container;
@@ -33,9 +35,9 @@ public class AddCvDialog extends Dialog {
 		super.okPressed();
 	}
 
-	// public void setContainer(LoaderForm form) {
-	// this.form = form;
-	//
-	// }
-
+	@Override
+	protected void configureShell(Shell shell) {
+		super.configureShell(shell);
+		shell.setText("Add CV");
+	}
 }

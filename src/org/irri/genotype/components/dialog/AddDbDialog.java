@@ -6,6 +6,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.irri.genotype.components.form.DbForm;
+import org.eclipse.swt.layout.GridData;
 
 public class AddDbDialog extends Dialog {
 
@@ -22,7 +23,11 @@ public class AddDbDialog extends Dialog {
 	protected Control createDialogArea(Composite parent) {
 		container = (Composite) super.createDialogArea(parent);
 
-		form = new DbForm(container, SWT.NONE);
+		form = new DbForm(container, SWT.BORDER);
+		GridData gd_form = new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 1);
+		gd_form.widthHint = 349;
+		gd_form.heightHint = 116;
+		form.setLayoutData(gd_form);
 		
 		return container;
 	}
@@ -33,9 +38,10 @@ public class AddDbDialog extends Dialog {
 		super.okPressed();
 	}
 
-	// public void setContainer(LoaderForm form) {
-	// this.form = form;
-	//
-	// }
+	@Override
+	protected void configureShell(Shell shell) {
+		super.configureShell(shell);
+		shell.setText("Add Db");
+	}
 
 }

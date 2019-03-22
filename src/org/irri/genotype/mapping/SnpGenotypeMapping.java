@@ -12,8 +12,8 @@ public class SnpGenotypeMapping extends AbstractMapping<LoaderSnpGenotype> {
 		mapInteger("snp_feature_id", LoaderSnpGenotype::getSnpFeatureId);
 		mapInteger("stock_sample_id", LoaderSnpGenotype::getStockSampleId);
 		mapInteger("genotype_run_id", LoaderSnpGenotype::getGenotypeRunId);
-		mapString("allele1", LoaderSnpGenotype::getAllele1);
-		mapString("allele2", LoaderSnpGenotype::getAllele2);
+		mapText("allele1", LoaderSnpGenotype::getAllele1);
+		mapText("allele2", LoaderSnpGenotype::getAllele2);
 
 	}
 

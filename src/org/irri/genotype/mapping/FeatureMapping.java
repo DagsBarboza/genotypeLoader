@@ -13,8 +13,8 @@ public class FeatureMapping extends AbstractMapping<LoaderFeature> {
 		
 		
 		mapInteger("organism_id", LoaderFeature::getOrganismId);
-		mapString("uniquename", LoaderFeature::getUniqueName);
-		mapString("name", LoaderFeature::getName);
+		mapText("uniquename", LoaderFeature::getUniqueName);
+		mapText("name", LoaderFeature::getName);
 		mapInteger("type_id", LoaderFeature::getTypeId);
 		mapBoolean("is_analysis", LoaderFeature::isAnalysis);
 		mapBoolean("is_obsolete", LoaderFeature::isObsolete);

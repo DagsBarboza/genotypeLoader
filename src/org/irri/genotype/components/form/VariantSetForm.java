@@ -3,9 +3,12 @@ package org.irri.genotype.components.form;
 import java.util.HashMap;
 import java.util.List;
 
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
@@ -17,8 +20,11 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.wb.swt.SWTResourceManager;
+import org.irri.genotype.ComponentConstants;
 import org.irri.genotype.components.LoaderForm;
 import org.irri.genotype.components.dialog.AddCvTermDialog;
+import org.irri.genotype.components.dialog.AddVariantSetDialog;
+import org.irri.genotype.loader.utils.ComponentElementUtils;
 
 import chado.loader.model.Cvterm;
 import chado.loader.model.Variantset;
@@ -43,7 +49,7 @@ public class VariantSetForm extends Composite implements LoaderForm {
 	 * @param style
 	 */
 	public VariantSetForm(final Composite parent, int style) {
-		super(parent, SWT.NONE);
+		super(parent, SWT.BORDER);
 
 		cvTermMap = new HashMap<>();
 		cvTermDs = new CvTermService();
@@ -63,7 +69,7 @@ public class VariantSetForm extends Composite implements LoaderForm {
 		nameLbl.setText("Name");
 
 		txtVNamebox = new Text(this, SWT.BORDER);
-		txtVNamebox.setBounds(128, 7, 240, 21);
+		txtVNamebox.setBounds(128, 7, 257, 21);
 		toolkit.adapt(txtVNamebox, true, true);
 
 		Label lblDescription = new Label(this, SWT.NONE);
@@ -72,7 +78,7 @@ public class VariantSetForm extends Composite implements LoaderForm {
 		lblDescription.setText("Description");
 
 		txtDescbox = new Text(this, SWT.BORDER);
-		txtDescbox.setBounds(128, 34, 240, 21);
+		txtDescbox.setBounds(128, 34, 257, 21);
 		toolkit.adapt(txtDescbox, true, true);
 
 		Label lblUrlPrefix = new Label(this, SWT.NONE);
@@ -92,26 +98,51 @@ public class VariantSetForm extends Composite implements LoaderForm {
 		cvTermCombo.setBounds(128, 61, 159, 23);
 		toolkit.adapt(cvTermCombo);
 		toolkit.paintBordersFor(cvTermCombo);
-
-		btnNewButton = new Button(this, SWT.NONE);
-		btnNewButton.setBounds(293, 61, 75, 25);
-		toolkit.adapt(btnNewButton, true, true);
-		btnNewButton.setText("New CV Term");
-		btnNewButton.addListener(SWT.Selection, new Listener() {
+		cvTermCombo.addSelectionListener(new SelectionListener() {
 
 			@Override
-			public void handleEvent(Event e) {
+			public void widgetSelected(SelectionEvent arg0) {
+				if (cvTermCombo.getText().equals(ComponentConstants.ADD_NEW)) {
+					AddVariantSetDialog dialog = new AddVariantSetDialog(parent.getShell());
+					if (Window.OK == dialog.open()) {
+						cvTermCombo.removeAll();
 
-				AddCvTermDialog dialog = new AddCvTermDialog(parent.getShell());
-				dialog.open();
+						ComponentElementUtils.initComboItem(cvTermCombo, cvTermDs.getAllCvTermName().toArray());
 
-				initItemsCvTermComboBox();
+					} else {
+						cvTermCombo.deselectAll();
+					}
+
+				}
 
 			}
 
+			@Override
+			public void widgetDefaultSelected(SelectionEvent arg0) {
+				// TODO Auto-generated method stub
+
+			}
 		});
 
-		initItemsCvTermComboBox();
+		// btnNewButton = new Button(this, SWT.NONE);
+		// btnNewButton.setBounds(293, 61, 92, 25);
+		// toolkit.adapt(btnNewButton, true, true);
+		// btnNewButton.setText("New CV Term");
+		// btnNewButton.addListener(SWT.Selection, new Listener() {
+		//
+		// @Override
+		// public void handleEvent(Event e) {
+		//
+		// AddCvTermDialog dialog = new AddCvTermDialog(parent.getShell());
+		// dialog.open();
+		//
+		// ComponentElementUtils.initComboItem(combo, items);
+		//
+		// }
+		//
+		// });
+
+		ComponentElementUtils.initComboItem(cvTermCombo, cvTermDs.getAllCvTermName().toArray());
 
 	}
 
@@ -130,14 +161,13 @@ public class VariantSetForm extends Composite implements LoaderForm {
 	public void save() {
 		VariantSetService ds = new VariantSetService();
 
-		
 		Cvterm cvterm = cvTermDs.findCvtermyName(cvTermCombo.getText()).get(0);
-		
+
 		Variantset vSet = new Variantset();
 		vSet.setCvterm(cvterm);
 		vSet.setDescription(txtDescbox.getText());
 		vSet.setName(txtVNamebox.getText());
-		
+
 		ds.insertRecord(vSet);
 
 	}

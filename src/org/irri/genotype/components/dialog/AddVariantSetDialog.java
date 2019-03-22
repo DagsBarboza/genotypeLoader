@@ -33,9 +33,9 @@ public class AddVariantSetDialog extends Dialog {
 		super.okPressed();
 	}
 
-	// public void setContainer(LoaderForm form) {
-	// this.form = form;
-	//
-	// }
-
+	@Override
+	protected void configureShell(Shell shell) {
+		super.configureShell(shell);
+		shell.setText("Add VariantSet");
+	}
 }

@@ -32,7 +32,7 @@ public class DbForm extends Composite implements LoaderForm{
 	 * @param style
 	 */
 	public DbForm(Composite parent, int style) {
-		super(parent, SWT.NONE);
+		super(parent, SWT.BORDER);
 		setBackground(SWTResourceManager.getColor(SWT.COLOR_TRANSPARENT));
 		addDisposeListener(new DisposeListener() {
 			public void widgetDisposed(DisposeEvent e) {

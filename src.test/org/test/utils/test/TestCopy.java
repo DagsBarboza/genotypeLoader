@@ -51,18 +51,50 @@ public class TestCopy {
 
 	}
 
+	
 	public void testCopyProc() {
 
 		Connection conn;
 		try {
-			conn = DriverManager.getConnection("jdbc:postgresql://172.29.4.215:5432/iric", "iric", "iric-dev");
+			conn = DriverManager.getConnection("jdbc:postgresql://172.29.4.215:5432/iita_new", "iric", "iric-dev");
 
 			System.err.println("Copying text data rows from stdin");
 
 			CopyManager copyManager = new CopyManager((BaseConnection) conn);
 
-			FileReader fileReader = new FileReader("D:\\Sorghum.positions");
-			copyManager.copyIn("COPY position FROM STDIN", fileReader);
+			FileReader fileReader = new FileReader("D:\\sorghum_rawfiles\\Sorghum.samples");
+//			copyManager.copyIn("COPY position FROM STDIN", fileReader);
+			copyManager.copyIn("copy sample from  'D:\\sorghum_rawfiles\\Sorghum.samples'");
+
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		System.out.println("DONE... ");
+
+	}
+	
+	
+	public void testInsertStockSample() {
+
+		Connection conn;
+		try {
+			conn = DriverManager.getConnection("jdbc:postgresql://172.29.4.215:5432/iita_new", "iric", "iric-dev");
+
+			System.err.println("Copying text data rows from stdin");
+
+			CopyManager copyManager = new CopyManager((BaseConnection) conn);
+
+			FileReader fileReader = new FileReader("D:\\sorghum_rawfiles\\Sorghum.samples");
+//			copyManager.copyIn("COPY position FROM STDIN", fileReader);
+			copyManager.copyIn("copy sample from  'D:\\sorghum_rawfiles\\Sorghum.samples'");
 
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
@@ -79,7 +111,7 @@ public class TestCopy {
 
 	}
 
-	@Test
+	
 	public void testGenerateSeries() {
 		long startTime = System.nanoTime();
 

@@ -44,29 +44,27 @@ import org.irri.genotype.mapping.SnpFeatureLocMapping;
 import org.irri.genotype.mapping.SnpFeaturePropMapping;
 import org.irri.genotype.mapping.SnpfeatureMapping;
 import org.irri.genotype.mapping.VariantVariantSetMapping;
+import org.postgresql.copy.CopyManager;
+import org.postgresql.core.BaseConnection;
 
 import chado.loader.model.Cvterm;
 import chado.loader.model.Db;
-import chado.loader.model.Dbxref;
 import chado.loader.model.Feature;
 import chado.loader.model.GenotypeRun;
 import chado.loader.model.Organism;
 import chado.loader.model.Platform;
 import chado.loader.model.Stock;
-import chado.loader.model.StockSample;
 import chado.loader.model.Variantset;
-import chado.loader.service.DbXrefService;
 import chado.loader.service.FeatureService;
 import chado.loader.service.GenotypeRunService;
 import chado.loader.service.PlatformService;
 import chado.loader.service.SnpFeatureService;
-import chado.loader.service.StockSampleService;
 import chado.loader.service.StockService;
 import chado.loader.service.VariantVariantSetService;
 import de.bytefish.pgbulkinsert.PgBulkInsert;
 import de.bytefish.pgbulkinsert.util.PostgreSqlUtils;
 
-public class LoadingDialog extends Dialog {
+public class LoadingDialog2 extends Dialog {
 
 	private Composite container;
 	private ProgressBar progressBar;
@@ -92,7 +90,7 @@ public class LoadingDialog extends Dialog {
 	private FileChooserListener fcl6;
 	private LoaderProperties prop;
 
-	public LoadingDialog(Display display, Shell parentShell, FileChooserListener fcl, FileChooserListener fcl2,
+	public LoadingDialog2(Display display, Shell parentShell, FileChooserListener fcl, FileChooserListener fcl2,
 			FileChooserListener fcl3, FileChooserListener fcl4, FileChooserListener fcl5, FileChooserListener fcl6,
 			Cvterm cvterm, Organism organism, Db db, Variantset vSet, Cvterm ctTermfeature, Cvterm nonSynTerm,
 			Cvterm spliceAccTerm, Cvterm spliceDnrTerm, LoaderProperties prop) {
@@ -155,7 +153,7 @@ public class LoadingDialog extends Dialog {
 
 		loader.start();
 
-		// System.out.println("RUNNING");
+//		System.out.println("RUNNING");
 
 		return container;
 	}
@@ -205,22 +203,20 @@ public class LoadingDialog extends Dialog {
 			final StockService ds = new StockService();
 			final FeatureService featureDs = new FeatureService();
 			final SnpFeatureService sf_ds = new SnpFeatureService();
-			final DbXrefService dbXrefDs = new DbXrefService();
-			final StockSampleService stockSampleDs = new StockSampleService();
 
 			VariantVariantSetService vvs_ds = new VariantVariantSetService();
-
+			
 			Integer id = (Integer) sf_ds.getSnpFeatureCurrentSeqNumber();
 
 			Integer vvs_id = vvs_ds.getVariantVariantSetCurrentSeqNumber() + 1;
-
+			
 			conn = null;
 
 			startTime = System.nanoTime();
 
 			try {
-				System.out.println("jdbc:postgresql://" + prop.getHostname() + "/" + prop.getDatabasename() + ","
-						+ prop.getUsername() + "," + prop.getPassword());
+				System.out.println("jdbc:postgresql://" + prop.getHostname() + "/" + prop.getDatabasename()+ ","+
+						prop.getUsername()+","+ prop.getPassword());
 				conn = DriverManager.getConnection(
 						"jdbc:postgresql://" + prop.getHostname() + "/" + prop.getDatabasename(), prop.getUsername(),
 						prop.getPassword());
@@ -230,22 +226,23 @@ public class LoadingDialog extends Dialog {
 			}
 
 			try {
-				File samplefile = fcl.getFile();
-				File positionfile = fcl2.getFile();
-				File nonSynfile = fcl3.getFile();
-				File spliceAcceptorfile = fcl4.getFile();
-				File spliceDonorFile = fcl5.getFile();
+				FileReader samplefile = new FileReader(fcl.getFile());
+				FileReader positionfile = new FileReader(fcl2.getFile());
+				FileReader nonSynfile = new FileReader(fcl3.getFile());
+				FileReader spliceAcceptorfile = new FileReader(fcl4.getFile());
+				FileReader spliceDonorFile = new FileReader(fcl5.getFile());
 
-				BufferedReader sampleFileReader = getBufferedReader(samplefile);
-				BufferedReader posFileReader = getBufferedReader(positionfile);
-				final BufferedReader nonSynfileReader = getBufferedReader(nonSynfile);
-				final BufferedReader spliceAccReader = getBufferedReader(spliceAcceptorfile);
-				final BufferedReader spliceDnrReader = getBufferedReader(spliceDonorFile);
-
-				int sampleFileNumber = getlineNumber(samplefile);
-				int positionFile = getlineNumber(positionfile);
-				lines = sampleFileNumber + getlineNumber(positionfile) + getlineNumber(nonSynfile)
-						+ getlineNumber(spliceAcceptorfile) + getlineNumber(spliceDonorFile);
+				// BufferedReader sampleFileReader = getBufferedReader(samplefile);
+				// BufferedReader posFileReader = getBufferedReader(positionfile);
+				// final BufferedReader nonSynfileReader = getBufferedReader(nonSynfile);
+				// final BufferedReader spliceAccReader = getBufferedReader(spliceAcceptorfile);
+				// final BufferedReader spliceDnrReader = getBufferedReader(spliceDonorFile);
+				//
+				// int sampleFileNumber = getlineNumber(samplefile);
+				// int positionFile = getlineNumber(positionfile);
+				// lines = sampleFileNumber + getlineNumber(positionfile) +
+				// getlineNumber(nonSynfile)
+				// + getlineNumber(spliceAcceptorfile) + getlineNumber(spliceDonorFile);
 
 				startProgressBar(lines);
 
@@ -253,27 +250,33 @@ public class LoadingDialog extends Dialog {
 
 				counter = 1;
 
-				// List<LoaderStock> stockList = new ArrayList<>();
-
-				Integer hdfCounter = 0;
-				if (sampleFileReader != null) {
-					writeProgress("Loading Sample File.... \n");
-					writeProgress("Loading " + sampleFileNumber + " records .... \n");
-					while ((line = sampleFileReader.readLine()) != null) {
-
-						final String textContent = line;
-
-						Stock stock = AddStock(ds, textContent);
-						Dbxref dbXref = AddDbXref(dbXrefDs, textContent);
-
-						StockSample stockSample = AddStockSample(stockSampleDs, stock, dbXref, hdfCounter);
-
-						line = null;
-						hdfCounter++;
-
-						counter++;
-
-					}
+				if (samplefile != null) {
+					// writeProgress("Loading Sample File.... \n");
+					// writeProgress("Loading " + sampleFileNumber + " records .... \n");
+					// while ((line = sampleFileReader.readLine()) != null) {
+					//
+					// final String textContent = line;
+					//
+					// Stock stock = new Stock();
+					// stock.setCvterm(cvterm);
+					// stock.setOrganism(organism);
+					// stock.setIsObsolete(false);
+					// stock.setName(textContent);
+					// stock.setUniquename(textContent);
+					//
+					// if (ds.findByStockyByOrganismTypeName(cvterm, organism,
+					// textContent).isEmpty())
+					// ds.insertRecord(stock);
+					//
+					// stock = null;
+					// line = null;
+					//
+					// counter++;
+					//
+					// }
+					
+					CopyManager copyManager = new CopyManager((BaseConnection) conn);
+					copyManager.copyIn("copy stock_phenotype2(stock_id, type_id, qual_value) from  STDIN with csv", samplefile);
 				}
 
 				updateProgressBar();
@@ -291,14 +294,14 @@ public class LoadingDialog extends Dialog {
 
 				Feature feature = null;
 
-				if (posFileReader != null) {
+				if (positionfile != null) {
 					// int posCounter = 1;
 					// int lines = getlineNumber(positionfile);
 
-					writeProgress("Loading SnpFeature.... \n");
-					writeProgress("Loading " + positionFile + " records .... \n");
+					// writeProgress("Loading SnpFeature.... \n");
+					// writeProgress("Loading " + positionFile + " records .... \n");
 					// for (int i = 1; i <= lines; i++) {
-					int i = id + 1;
+					int i = id +1;
 
 					String pos = "";
 					while ((line = posFileReader.readLine()) != null) {
@@ -339,14 +342,18 @@ public class LoadingDialog extends Dialog {
 						loaderSnpFeature.setVariantSetId(vset.getVariantsetId());
 
 						snpFeatureList.add(loaderSnpFeature);
-
+						
 						loadervvs = new LoaderVariantVariantSet();
 						loadervvs.setVariantVariantsetId(vvs_id);
 						loadervvs.setVariantFeatureId(i);
 						loadervvs.setVariantset(vset.getVariantsetId());
 						loadervvs.setHdf5Index(i - 1);
-
+						
+						
+						
 						vvs_list.add(loadervvs);
+
+						
 
 						loaderSnpFeatureLoc = new LoaderSnpFeatureLoc();
 						loaderSnpFeatureLoc.setOrganismId(organism.getOrganismId());
@@ -360,10 +367,11 @@ public class LoadingDialog extends Dialog {
 						loaderSnpFeature = null;
 						loaderSnpFeatureLoc = null;
 						loadervvs = null;
-
+						
 						vvs_id++;
 						counter++;
 						i++;
+						
 
 					}
 					updateProgressBar();
@@ -378,26 +386,17 @@ public class LoadingDialog extends Dialog {
 					PgBulkInsert<LoaderSnpFeature> bulkInsert = new PgBulkInsert<LoaderSnpFeature>(
 							new SnpfeatureMapping("public", "snp_feature"));
 
-					// PgBulkInsert<LoaderStock> bulkInsertStock = new PgBulkInsert<LoaderStock>(
-					// new StockMapping("public", "stock"));
-
 					PgBulkInsert<LoaderSnpFeatureLoc> bulkInsertSnpFeatureLoc = new PgBulkInsert<LoaderSnpFeatureLoc>(
 							new SnpFeatureLocMapping("public", "snp_featureloc"));
-
-					PgBulkInsert<LoaderVariantVariantSet> bulkInsertVariantVariantSet = new PgBulkInsert<LoaderVariantVariantSet>(
+					
+					PgBulkInsert<LoaderVariantVariantSet> bulkInsertVariantVariantSet= new PgBulkInsert<LoaderVariantVariantSet>(
 							new VariantVariantSetMapping("public", "variant_variantset"));
 
-					/**
-					 * 
-					 */
 
 					bulkInsert.saveAll(PostgreSqlUtils.getPGConnection(conn), snpFeatureList.stream());
 
-					// bulkInsertStock.saveAll(PostgreSqlUtils.getPGConnection(conn),
-					// stockList.stream());
-
 					bulkInsertSnpFeatureLoc.saveAll(PostgreSqlUtils.getPGConnection(conn), snpfeatureLocList.stream());
-
+					
 					bulkInsertVariantVariantSet.saveAll(PostgreSqlUtils.getPGConnection(conn), vvs_list.stream());
 
 					// // Now save all entities of a given stream:
@@ -482,15 +481,15 @@ public class LoadingDialog extends Dialog {
 					// });
 				}
 
-				sampleFileReader.close();
-				posFileReader.close();
+				// sampleFileReader.close();
+				// posFileReader.close();
 				// nonSynfileReader.close();
 				// spliceAccReader.close();
 				// spliceDnrReader.close();
 
 				display.syncExec(new Runnable() {
 					public void run() {
-						// System.out.println("Starting to 2nd part of loading");
+//						System.out.println("Starting to 2nd part of loading");
 						Platform platform = insertPlatForm();
 						if (fcl6.getFile() != null)
 							insertGenotypeRun(platform);
@@ -568,52 +567,6 @@ public class LoadingDialog extends Dialog {
 		//
 		// }
 
-		private StockSample AddStockSample(StockSampleService stockSampleDs, Stock stock, Dbxref dbXref,
-				Integer hdf5Index) {
-			StockSample ss = new StockSample();
-			ss.setDbxref(dbXref);
-			ss.setStock(stock);
-			ss.setHdf5Index(hdf5Index);
-
-			return (StockSample) stockSampleDs.insertRecord(ss);
-
-		}
-
-		private Dbxref AddDbXref(DbXrefService dbXrefDs, String textContent) {
-			Dbxref dbXref = new Dbxref();
-			dbXref.setAccession(textContent);
-			dbXref.setDb(db);
-			dbXref.setVersion("1");
-
-			List<Dbxref> result = dbXrefDs.findByDbAndAccession(textContent, db);
-			if (result.isEmpty()) {
-				dbXref = (Dbxref) dbXrefDs.insertRecord(dbXref);
-			} else
-				dbXref = result.get(0);
-
-			return dbXref;
-
-		}
-
-		private Stock AddStock(StockService ds, String textContent) {
-
-			Stock stock = new Stock();
-			stock.setCvterm(cvterm);
-			stock.setOrganism(organism);
-			stock.setIsObsolete(false);
-			stock.setName(textContent);
-			stock.setUniquename(textContent);
-
-			List<Stock> result = ds.findByStockyByOrganismTypeName(cvterm, organism, textContent);
-			if (result.isEmpty()) {
-				stock = (Stock) ds.insertRecord(stock);
-			} else
-				stock = result.get(0);
-
-			return stock;
-
-		}
-
 		private void insertSnpFeatureProp(BufferedReader file, HashMap<String, Integer> snpFeatureMap, Cvterm cvTerm) {
 			display.asyncExec(new Runnable() {
 				public void run() {
@@ -624,12 +577,12 @@ public class LoadingDialog extends Dialog {
 					try {
 						while ((line = file.readLine()) != null) {
 							String token[] = line.split(",");
-							// System.out.println("LINE:" + line);
-							// System.out.println("Token: " + token[0] + "->" + token[1]);
+//							System.out.println("LINE:" + line);
+//							System.out.println("Token: " + token[0] + "->" + token[1]);
 
 							// HashMap<String, Integer> pos = snpFeatureMap.get(token[0]);
-							// System.out.println("SNP FEATURE MAP: " + snpFeatureMap.size());
-							// System.out.println("snpFeature size: " + snpFeatureMap.size());
+//							System.out.println("SNP FEATURE MAP: " + snpFeatureMap.size());
+//							System.out.println("snpFeature size: " + snpFeatureMap.size());
 
 							snpFeatureProp = new LoaderSnpFeatureProp();
 							snpFeatureProp.setTypeId(cvTerm.getCvtermId());

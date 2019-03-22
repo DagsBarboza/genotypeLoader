@@ -6,6 +6,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.irri.genotype.components.form.CvTermForm;
+import org.eclipse.swt.layout.GridData;
 
 public class AddCvTermDialog extends Dialog {
 
@@ -22,6 +23,10 @@ public class AddCvTermDialog extends Dialog {
 		container = (Composite) super.createDialogArea(parent);
 
 		form = new CvTermForm(container, SWT.NONE);
+		GridData gd_form = new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 1);
+		gd_form.heightHint = 135;
+		gd_form.widthHint = 399;
+		form.setLayoutData(gd_form);
 
 		return container;
 	}
@@ -32,9 +37,10 @@ public class AddCvTermDialog extends Dialog {
 		super.okPressed();
 	}
 
-	// public void setContainer(LoaderForm form) {
-	// this.form = form;
-	//
-	// }
+	@Override
+	protected void configureShell(Shell shell) {
+		super.configureShell(shell);
+		shell.setText("Add CvTerm");
+	}
 
 }

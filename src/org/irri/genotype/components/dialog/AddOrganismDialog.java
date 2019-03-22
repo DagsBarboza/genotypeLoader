@@ -6,6 +6,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.irri.genotype.components.form.OrganismForm;
+import org.eclipse.swt.layout.GridData;
 
 public class AddOrganismDialog extends Dialog {
 
@@ -23,6 +24,11 @@ public class AddOrganismDialog extends Dialog {
 
 		form = new OrganismForm(container, SWT.NONE);
 
+		GridData gd_form = new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 1);
+		gd_form.widthHint = 385;
+		gd_form.heightHint = 97;
+		form.setLayoutData(gd_form);
+
 		return container;
 	}
 
@@ -32,9 +38,10 @@ public class AddOrganismDialog extends Dialog {
 		super.okPressed();
 	}
 
-	// public void setContainer(LoaderForm form) {
-	// this.form = form;
-	//
-	// }
+	@Override
+	protected void configureShell(Shell shell) {
+		super.configureShell(shell);
+		shell.setText("Add Organism");
+	}
 
 }

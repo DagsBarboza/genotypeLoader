@@ -13,7 +13,7 @@ public class SnpFeatureLocMapping extends AbstractMapping<LoaderSnpFeatureLoc> {
 		mapInteger("organism_id", LoaderSnpFeatureLoc::getOrganismId);
 		mapInteger("srcfeature_id", LoaderSnpFeatureLoc::getSrcFeatureid);
 		mapInteger("position", LoaderSnpFeatureLoc::getPosition);
-		mapString("refcall", LoaderSnpFeatureLoc::getRefCall);
+		mapText("refcall", LoaderSnpFeatureLoc::getRefCall);
 
 		// mapDate("timeaccessioned", LoaderFeature::getTimeAccession);
 		// mapDate("timelastmodified", LoaderFeature::getTimeModified);
